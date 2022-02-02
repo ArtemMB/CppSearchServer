@@ -302,16 +302,95 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
     }
 }
 
-/*
-Разместите код остальных тестов здесь
-*/
+
+//Тест проверяет, что поисковая система не добавляет документы с 
+//минус-словами в результат поиска
+void TestMinusWords(){
+    const int norm_doc_id{42};
+    const int bad_doc_id{13};
+    const int none_doc_id{666};
+    const string norm_content{"cat in the city"s};
+    const string bad_content{"cat city"s};
+    const string none_content{"london is city"s};
+    const vector<int> ratings{ 1, 2, 3};
+    const set<int> ids{norm_doc_id, bad_doc_id};
+    
+    // Сначала убеждаемся, что поиск находит все документы с + словом
+    {
+        SearchServer server;
+        server.AddDocument(norm_doc_id, norm_content, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(bad_doc_id, bad_content, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(none_doc_id, none_content, DocumentStatus::ACTUAL, ratings);
+        const auto found_docs{ server.FindTopDocuments("cat"s)};
+        assert(found_docs.size() == 2);        
+        assert(ids.count(found_docs[1].id) == 1);
+        assert(ids.count(found_docs[0].id) == 1);
+    }
+    // Затем убеждаемся, что поиск исключает документы с минус словом    
+    {
+        SearchServer server;
+        server.AddDocument(norm_doc_id, norm_content, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(bad_doc_id, bad_content, DocumentStatus::ACTUAL, ratings);
+        server.AddDocument(none_doc_id, none_content, DocumentStatus::ACTUAL, ratings);
+        const string raw_query{"cat -in"s};
+        const auto found_docs{ server.FindTopDocuments(raw_query)};
+        assert(found_docs.size() == 1);
+        assert(found_docs[0].id == bad_doc_id);
+    }
+    
+    // Затем убеждаемся, что поиск исключает документы с минус словом   
+    //возвращает пустой результат
+    {
+        SearchServer server;        
+        server.AddDocument(bad_doc_id, bad_content, DocumentStatus::ACTUAL, ratings);        
+        const auto found_docs{ server.FindTopDocuments("city -cat "s)};
+        assert(found_docs.empty());        
+    }    
+}
+
+//Тест проверяет матчинг документов
+void TestMatchDocument(){
+    assert(0);
+}
+
+//Тест проверяет cортировку найденных документов по релевантности
+void TestRelevanceSorting(){
+    assert(0);
+}
+
+//Тест проверяет вычисление рейтинга документов
+void TestRating(){
+    assert(0);
+}
+
+//Тест проверяет использование предиката, задаваемого пользователем
+void TestUserPredicate(){
+    assert(0);
+}
+
+//Тест проверяет поиск документов, имеющих заданный статус.
+void TestHasStatus(){
+    assert(0);
+}
+
+//Тест проверяет вычисление релевантности
+void TestRelevanceCalculation(){
+    assert(0);
+}
 
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer() {
     TestExcludeStopWordsFromAddedDocumentContent();
-    // Не забудьте вызывать остальные тесты здесь
-    cout<<"finished";
+    TestMinusWords();
+    TestMatchDocument();
+    TestRelevanceSorting();
+    TestRating();
+    TestUserPredicate();
+    TestHasStatus();
+    TestRelevanceCalculation();
 }
+
+
 
 // --------- Окончание модульных тестов поисковой системы -----------
 void PrintDocument(const Document& document) {
@@ -357,6 +436,6 @@ int main() {
     { return document_id % 2 == 0; })) {
         PrintDocument(document);
     }    */
-
+    cout << "Search server testing finished"s << endl;
     return 0;
 }
