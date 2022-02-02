@@ -350,7 +350,30 @@ void TestMinusWords(){
 
 //Тест проверяет матчинг документов
 void TestMatchDocument(){
-    assert(0);
+    const int norm_doc_id{42};    
+    const string norm_content{"cat in the city"s};    
+    const vector<int> ratings{ 1, 2, 3};    
+    
+    // Сначала убеждаемся, что поиск находит все документы с + словом
+    {
+        SearchServer server;
+        server.AddDocument(norm_doc_id, norm_content, DocumentStatus::ACTUAL, ratings);
+        
+        const vector<string> found_words{
+            std::get<0>(server.MatchDocument("cat city"s, norm_doc_id))};
+        assert(found_words.size() == 2);        
+        
+    }
+    
+    // Затем убеждаемся, что поиск исключает документы с минус словом    
+    {
+        SearchServer server;
+        server.AddDocument(norm_doc_id, norm_content, DocumentStatus::ACTUAL, ratings);        
+        
+        const vector<string> found_words{
+            std::get<0>(server.MatchDocument("cat -city"s, norm_doc_id))};
+        assert(found_words.empty());        
+    }
 }
 
 //Тест проверяет cортировку найденных документов по релевантности
