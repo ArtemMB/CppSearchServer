@@ -378,7 +378,17 @@ void TestMatchDocument(){
 
 //Тест проверяет cортировку найденных документов по релевантности
 void TestRelevanceSorting(){
-    assert(0);
+    const vector<int> ratings{ 1, 2, 3};  
+    
+    SearchServer server;    
+    server.AddDocument(0, "белый кот модный ошейник"s,          DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(1, "пушистый кот пушистый хвост"s,       DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, ratings);
+    server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, ratings);
+    const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s)};
+    assert(found_docs.size() == 3);    
+    assert(found_docs[0].relevance >= found_docs[1].relevance);
+    assert(found_docs[1].relevance >= found_docs[2].relevance);    
 }
 
 //Тест проверяет вычисление рейтинга документов
