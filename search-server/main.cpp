@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 #include <numeric>
-#include <cassert>
+//#include <cassert>
 
 #include <windows.h>
 
@@ -16,6 +16,58 @@ using namespace std;
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 const double EPSILON = 1e-6;
 
+
+void AssertImpl(const bool expr_value, const string& expr_str, 
+            const string& file,
+            const string& func, unsigned line, 
+            const string& hint) {
+    if (expr_value) {
+        return;
+    }
+    
+    cerr  << file << "("s << line << "): "s << func << ": "s;
+    cerr  << "ASSERT("s << expr_str << ") failed."s;
+    
+    if (!hint.empty()) {
+        cerr  << " Hint: "s << hint;
+    }
+    
+    cerr  << endl;
+    abort();
+}
+
+#define ASSERT(expr) AssertImpl((expr), #expr, __FILE__, __FUNCTION__, __LINE__, ""s)
+
+#define ASSERT_HINT(expr, hint) AssertImpl((expr), #expr, __FILE__, __FUNCTION__, __LINE__, (hint))
+
+template <typename T, typename U>
+void AssertEqualImpl(const T& t, const U& u, const string& t_str,
+                     const string& u_str, const string& file,
+                     const string& func, unsigned line, const string& hint) {
+    if (t != u) {
+        cerr  << boolalpha;
+        cerr  << file << "("s << line << "): "s << func << ": "s;
+        cerr  << "ASSERT_EQUAL("s << t_str << ", "s << u_str << ") failed: "s;
+        cerr  << t << " != "s << u << "."s;
+        if (!hint.empty()) {
+            cerr  << " Hint: "s << hint;
+        }
+        cerr  << endl;
+        abort();
+    }
+}
+
+#define ASSERT_EQUAL(a, b) AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, ""s)
+
+#define ASSERT_EQUAL_HINT(a, b, hint) AssertEqualImpl((a), (b), #a, #b, __FILE__, __FUNCTION__, __LINE__, (hint))
+
+template <typename Function>
+void RunTestImpl(Function fun, const string& fun_name) {    
+    fun();
+    cerr << fun_name<< " OK"s << endl;
+}
+
+#define RUN_TEST(func)  RunTestImpl((func), #func)
 
 string ReadLine() {
     string s;
@@ -288,9 +340,9 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
         SearchServer server;
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
         const auto found_docs{ server.FindTopDocuments("in"s)};
-        assert(found_docs.size() == 1);
+        ASSERT_EQUAL(found_docs.size(), 1);
         const Document& doc0{found_docs[0]};
-        assert(doc0.id == doc_id);
+        ASSERT_EQUAL(doc0.id, doc_id);
     }
 
     // Затем убеждаемся, что поиск этого же слова, входящего в список стоп-слов,
@@ -299,7 +351,7 @@ void TestExcludeStopWordsFromAddedDocumentContent() {
         SearchServer server;
         server.SetStopWords("in the"s);
         server.AddDocument(doc_id, content, DocumentStatus::ACTUAL, ratings);
-        assert(server.FindTopDocuments("in"s).empty());
+        ASSERT_HINT(server.FindTopDocuments("in"s).empty(), "Stop words must be excluded from documents"s);
     }
 }
 
@@ -323,9 +375,9 @@ void TestMinusWords(){
         server.AddDocument(bad_doc_id, bad_content, DocumentStatus::ACTUAL, ratings);
         server.AddDocument(none_doc_id, none_content, DocumentStatus::ACTUAL, ratings);
         const auto found_docs{ server.FindTopDocuments("cat"s)};
-        assert(found_docs.size() == 2);        
-        assert(ids.count(found_docs[1].id) == 1);
-        assert(ids.count(found_docs[0].id) == 1);
+        ASSERT_EQUAL(found_docs.size(), 2);        
+        ASSERT_EQUAL(ids.count(found_docs[1].id), 1);
+        ASSERT_EQUAL(ids.count(found_docs[0].id), 1);
     }
     // Затем убеждаемся, что поиск исключает документы с минус словом    
     {
@@ -335,8 +387,8 @@ void TestMinusWords(){
         server.AddDocument(none_doc_id, none_content, DocumentStatus::ACTUAL, ratings);
         const string raw_query{"cat -in"s};
         const auto found_docs{ server.FindTopDocuments(raw_query)};
-        assert(found_docs.size() == 1);
-        assert(found_docs[0].id == bad_doc_id);
+        ASSERT_EQUAL(found_docs.size(), 1);
+        ASSERT_EQUAL(found_docs[0].id, bad_doc_id);
     }
     
     // Затем убеждаемся, что поиск исключает документы с минус словом   
@@ -345,7 +397,7 @@ void TestMinusWords(){
         SearchServer server;        
         server.AddDocument(bad_doc_id, bad_content, DocumentStatus::ACTUAL, ratings);        
         const auto found_docs{ server.FindTopDocuments("city -cat "s)};
-        assert(found_docs.empty());        
+        ASSERT(found_docs.empty());        
     }    
 }
 
@@ -362,7 +414,7 @@ void TestMatchDocument(){
         
         const vector<string> found_words{
             std::get<0>(server.MatchDocument("cat city"s, norm_doc_id))};
-        assert(found_words.size() == 2);        
+        ASSERT_EQUAL(found_words.size(), 2);        
         
     }
     
@@ -373,7 +425,7 @@ void TestMatchDocument(){
         
         const vector<string> found_words{
             std::get<0>(server.MatchDocument("cat -city"s, norm_doc_id))};
-        assert(found_words.empty());        
+        ASSERT(found_words.empty());        
     }
 }
 
@@ -387,9 +439,9 @@ void TestRelevanceSorting(){
     server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, ratings);
     server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, ratings);
     const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s)};
-    assert(found_docs.size() == 3);    
-    assert(found_docs[0].relevance >= found_docs[1].relevance);
-    assert(found_docs[1].relevance >= found_docs[2].relevance);    
+    ASSERT_EQUAL(found_docs.size(),  3);    
+    ASSERT(found_docs[0].relevance >= found_docs[1].relevance);
+    ASSERT(found_docs[1].relevance >= found_docs[2].relevance);    
 }
 
 //Тест проверяет вычисление рейтинга документов
@@ -401,16 +453,16 @@ void TestRating(){
     server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, {9});
     
     const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s)};
-    assert(found_docs.size() == 3);  
+    ASSERT_EQUAL(found_docs.size(),  3);  
     
-    assert(found_docs[0].id == 1);
-    assert(found_docs[0].rating == 5);
+    ASSERT_EQUAL(found_docs[0].id,  1);
+    ASSERT_EQUAL(found_docs[0].rating,  5);
     
-    assert(found_docs[1].id == 2);
-    assert(found_docs[1].rating == -1);
+    ASSERT_EQUAL(found_docs[1].id,  2);
+    ASSERT_EQUAL(found_docs[1].rating,  -1);
     
-    assert(found_docs[2].id == 0);
-    assert(found_docs[2].rating == 2);    
+    ASSERT_EQUAL(found_docs[2].id, 0);
+    ASSERT_EQUAL(found_docs[2].rating, 2);    
 }
 
 //Тест проверяет использование предиката, задаваемого пользователем
@@ -427,10 +479,10 @@ void TestUserPredicate(){
                             [](int document_id, DocumentStatus, int)
             { return document_id == 1; })};
         
-        assert(found_docs.size() == 1);  
+        ASSERT_EQUAL(found_docs.size(), 1);  
         
-        assert(found_docs[0].id == 1);
-        assert(found_docs[0].rating == 5);
+        ASSERT_EQUAL(found_docs[0].id, 1);
+        ASSERT_EQUAL(found_docs[0].rating, 5);
     }
     
     //
@@ -439,10 +491,10 @@ void TestUserPredicate(){
                             [](int , DocumentStatus document_status, int)
             { return document_status == DocumentStatus::BANNED; })};
         
-        assert(found_docs.size() == 1);  
+        ASSERT_EQUAL(found_docs.size(), 1);  
         
-        assert(found_docs[0].id == 3);
-        assert(found_docs[0].rating == 9);
+        ASSERT_EQUAL(found_docs[0].id, 3);
+        ASSERT_EQUAL(found_docs[0].rating, 9);
     }    
 }
 
@@ -457,25 +509,25 @@ void TestHasStatus(){
     {
         const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s,
                                                       DocumentStatus::ACTUAL)};
-        assert(found_docs.size() == 3);  
+        ASSERT_EQUAL(found_docs.size(), 3);  
         
-        assert(found_docs[0].id == 1);
-        assert(found_docs[0].rating == 5);
+        ASSERT_EQUAL(found_docs[0].id, 1);
+        ASSERT_EQUAL(found_docs[0].rating, 5);
         
-        assert(found_docs[1].id == 2);
-        assert(found_docs[1].rating == -1);
+        ASSERT_EQUAL(found_docs[1].id, 2);
+        ASSERT_EQUAL(found_docs[1].rating, -1);
         
-        assert(found_docs[2].id == 0);
-        assert(found_docs[2].rating == 2);    
+        ASSERT_EQUAL(found_docs[2].id, 0);
+        ASSERT_EQUAL(found_docs[2].rating, 2);    
     }
     
     {
         const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s,
                                                       DocumentStatus::BANNED)};
-        assert(found_docs.size() == 1);  
+        ASSERT_EQUAL(found_docs.size(), 1);  
         
-        assert(found_docs[0].id == 3);
-        assert(found_docs[0].rating == 9);
+        ASSERT_EQUAL(found_docs[0].id, 3);
+        ASSERT_EQUAL(found_docs[0].rating, 9);
     }    
 }
 
@@ -488,28 +540,28 @@ void TestRelevanceCalculation(){
     server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, {9});
     
     const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s)};
-    assert(found_docs.size() == 3);  
+    ASSERT_EQUAL(found_docs.size(), 3);  
     
-    assert(found_docs[0].id == 1);
-    assert(abs(found_docs[0].relevance - 0.8664339757) < EPSILON);
+    ASSERT_EQUAL(found_docs[0].id, 1);
+    ASSERT(abs(found_docs[0].relevance - 0.8664339757) < EPSILON);
     
-    assert(found_docs[1].id == 2);
-    assert(abs(found_docs[1].relevance - 0.17328679514) < EPSILON);
+    ASSERT_EQUAL(found_docs[1].id, 2);
+    ASSERT(abs(found_docs[1].relevance - 0.17328679514) < EPSILON);
     
-    assert(found_docs[2].id == 0);
-    assert(abs(found_docs[2].relevance - 0.138629436112) < EPSILON);        
+    ASSERT_EQUAL(found_docs[2].id, 0);
+    ASSERT(abs(found_docs[2].relevance - 0.138629436112) < EPSILON);        
 }
 
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer() {
-    TestExcludeStopWordsFromAddedDocumentContent();
-    TestMinusWords();
-    TestMatchDocument();
-    TestRelevanceSorting();
-    TestRating();
-    TestUserPredicate();
-    TestHasStatus();
-    TestRelevanceCalculation();
+    RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
+    RUN_TEST(TestMinusWords);
+    RUN_TEST(TestMatchDocument);
+    RUN_TEST(TestRelevanceSorting);
+    RUN_TEST(TestRating);
+    RUN_TEST(TestUserPredicate);
+    RUN_TEST(TestHasStatus);
+    RUN_TEST(TestRelevanceCalculation);
 }
 
 
