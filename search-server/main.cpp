@@ -415,7 +415,42 @@ void TestRating(){
 
 //Тест проверяет использование предиката, задаваемого пользователем
 void TestUserPredicate(){
-    assert(0);
+    
+    //
+    {
+        SearchServer server;    
+        server.AddDocument(0, "белый кот и модный ошейник"s,        DocumentStatus::ACTUAL, {8, -3});
+        server.AddDocument(1, "пушистый кот пушистый хвост"s,       DocumentStatus::ACTUAL, {7, 2, 7});
+        server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {5, -12, 2, 1});
+        server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, {9});
+        
+        const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s,                                                      
+                            [](int document_id, DocumentStatus, int)
+            { return document_id == 1; })};
+        
+        assert(found_docs.size() == 1);  
+        
+        assert(found_docs[0].id == 1);
+        assert(found_docs[0].rating == 5);
+    }
+    
+    //
+    {
+        SearchServer server;    
+        server.AddDocument(0, "белый кот и модный ошейник"s,        DocumentStatus::ACTUAL, {8, -3});
+        server.AddDocument(1, "пушистый кот пушистый хвост"s,       DocumentStatus::ACTUAL, {7, 2, 7});
+        server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {5, -12, 2, 1});
+        server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, {9});
+        
+        const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s,                                                      
+                            [](int , DocumentStatus document_status, int)
+            { return document_status == DocumentStatus::BANNED; })};
+        
+        assert(found_docs.size() == 1);  
+        
+        assert(found_docs[0].id == 3);
+        assert(found_docs[0].rating == 9);
+    }    
 }
 
 //Тест проверяет поиск документов, имеющих заданный статус.
