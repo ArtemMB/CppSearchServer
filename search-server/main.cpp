@@ -481,7 +481,23 @@ void TestHasStatus(){
 
 //Тест проверяет вычисление релевантности
 void TestRelevanceCalculation(){
-    assert(0);
+    SearchServer server;    
+    server.AddDocument(0, "белый кот и модный ошейник"s,        DocumentStatus::ACTUAL, {8, -3});
+    server.AddDocument(1, "пушистый кот пушистый хвост"s,       DocumentStatus::ACTUAL, {7, 2, 7});
+    server.AddDocument(2, "ухоженный пёс выразительные глаза"s, DocumentStatus::ACTUAL, {5, -12, 2, 1});
+    server.AddDocument(3, "ухоженный скворец евгений"s,         DocumentStatus::BANNED, {9});
+    
+    const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s)};
+    assert(found_docs.size() == 3);  
+    
+    assert(found_docs[0].id == 1);
+    assert(abs(found_docs[0].relevance - 0.8664339757) < EPSILON);
+    
+    assert(found_docs[1].id == 2);
+    assert(abs(found_docs[1].relevance - 0.17328679514) < EPSILON);
+    
+    assert(found_docs[2].id == 0);
+    assert(abs(found_docs[2].relevance - 0.138629436112) < EPSILON);        
 }
 
 // Функция TestSearchServer является точкой входа для запуска тестов
