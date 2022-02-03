@@ -169,12 +169,13 @@ private:
     }
     
     vector<string> SplitIntoWordsNoStop(const string& text) const {
-        vector<string> words;
-        for (const string& word : SplitIntoWords(text)) {
-            if (!IsStopWord(word)) {
-                words.push_back(word);
-            }
-        }
+        vector<string> words;        
+        const vector<string> raw_words{SplitIntoWords(text)};
+        copy_if(raw_words.cbegin(), raw_words.cend(), 
+                std::back_inserter(words),
+                [this](const string& word){            
+                        return !IsStopWord(word);
+                });
         return words;
     }
     
@@ -440,8 +441,8 @@ int main() {
     SetConsoleCP(65001);
     
     TestSearchServer();
-    /*
-    SearchServer search_server;
+    
+    /*SearchServer search_server;
     search_server.SetStopWords("и в на"s);
 
     search_server.AddDocument(0, "белый кот и модный ошейник"s,        DocumentStatus::ACTUAL, {8, -3});
@@ -468,7 +469,7 @@ int main() {
                                         [](int document_id,    DocumentStatus, int )
     { return document_id % 2 == 0; })) {
         PrintDocument(document);
-    }    */
+    }    //*/
     cout << "Search server testing finished"s << endl;
     return 0;
 }
