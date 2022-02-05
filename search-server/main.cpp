@@ -339,8 +339,7 @@ private:
     
     template<typename DocumentPredicate>
     vector<Document> FindAllDocuments(const Query& query, DocumentPredicate mapper) const {
-        map<int, double> document_to_relevance;
-        cout<<"docs: "<<GetDocumentCount()<<endl;
+        map<int, double> document_to_relevance; 
         for (const string& word : query.plus_words) {
             if (word_to_document_freqs_.count(word) == 0) {
                 continue;
@@ -350,15 +349,8 @@ private:
             for (const auto [document_id, term_freq] : word_to_document_freqs_.at(word)) {
                 if (mapper(document_id,
                            documents_.at(document_id).status,
-                           documents_.at(document_id).rating)) {
-                    cout<<"doc id: "<<document_id<<" ";
-                    cout<<word<<" freq: "<<word_to_document_freqs_.at(word).size();
-                    cout<<" itf: "<<inverse_document_freq;
-                    cout<<" tf: "<<term_freq;
-                    cout<<" relevance: "<<document_to_relevance[document_id];
-                    cout<<" rel: "<<term_freq * inverse_document_freq<<" ";
-                    document_to_relevance[document_id] += term_freq * inverse_document_freq;
-                    cout<<" new_relevance: "<<document_to_relevance[document_id] << endl;
+                           documents_.at(document_id).rating)) {  
+                    document_to_relevance[document_id] += term_freq * inverse_document_freq;                
                 }
             }
         }
@@ -476,9 +468,7 @@ void TestMatchDocument(){
 }
 
 //Тест проверяет cортировку найденных документов по релевантности
-void TestSortByRelevance(){
-    //заранее расчитанные значения
-    
+void TestSortByRelevance(){    
     const vector<int> ratings{ 1, 2, 3};  
     
     SearchServer server;    
@@ -489,25 +479,14 @@ void TestSortByRelevance(){
     server.AddDocument(2, "ухоженный пёс выразительные глаза"s, 
                        DocumentStatus::ACTUAL, ratings);
     server.AddDocument(3, "ухоженный скворец евгений"s,         
-                       DocumentStatus::BANNED, ratings);
-    
-    vector<double> relevancesOfDocuments;
-    relevancesOfDocuments.push_back(log(server.GetDocumentCount()*1.0/2.0)*(0.25) +
-                                    log(server.GetDocumentCount()*1.0/1.0)*(0.5));
-    relevancesOfDocuments.push_back(log(server.GetDocumentCount()*1.0/2.0)*(0.25));
-    relevancesOfDocuments.push_back(log(server.GetDocumentCount()*1.0/2.0)*(0.25));
+                       DocumentStatus::BANNED, ratings);    
     
     const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s)};
     ASSERT_EQUAL(found_docs.size(),  3u); 
     
     ASSERT_EQUAL(found_docs[0].id,  1);
-    ASSERT(abs(found_docs[0].relevance - relevancesOfDocuments[0]) < EPSILON);
-    
-    ASSERT_EQUAL(found_docs[1].id,  0);
-    ASSERT(abs(found_docs[1].relevance - relevancesOfDocuments[1]) < EPSILON);
-    
-    ASSERT_EQUAL(found_docs[2].id,  2);    
-    ASSERT(abs(found_docs[2].relevance - relevancesOfDocuments[2]) < EPSILON); 
+    ASSERT_EQUAL(found_docs[1].id,  0);    
+    ASSERT_EQUAL(found_docs[2].id,  2); 
 }
 
 //Тест проверяет вычисление рейтинга документов
@@ -611,9 +590,7 @@ void TestSearchDocumentsByStatus(){
 }
 
 //Тест проверяет вычисление релевантности
-void TestCalculationRelevance(){
-    //заранее расчитанные значения
-    const vector<double> relevancesOfDocuments{0.8664339757, 0.17328679514, 0.138629436112};
+void TestCalculationRelevance(){    
     SearchServer server;    
     server.AddDocument(0, "белый кот и модный ошейник"s, 
                        DocumentStatus::ACTUAL, {8, -3});
@@ -623,6 +600,12 @@ void TestCalculationRelevance(){
                        DocumentStatus::ACTUAL, {5, -12, 2, 1});
     server.AddDocument(3, "ухоженный скворец евгений"s,         
                        DocumentStatus::BANNED, {9});
+    
+    vector<double> relevancesOfDocuments;
+    relevancesOfDocuments.push_back(log(server.GetDocumentCount()*1.0/2.0)*(0.25) +
+                                    log(server.GetDocumentCount()*1.0/1.0)*(0.5));
+    relevancesOfDocuments.push_back(log(server.GetDocumentCount()*1.0/2.0)*(0.25));
+    relevancesOfDocuments.push_back(log(server.GetDocumentCount()*1.0/2.0)*(0.2));
     
     const auto found_docs{server.FindTopDocuments("пушистый ухоженный кот"s)};
     ASSERT_EQUAL(found_docs.size(), 3u);  
@@ -639,14 +622,14 @@ void TestCalculationRelevance(){
 
 // Функция TestSearchServer является точкой входа для запуска тестов
 void TestSearchServer() {
-    //RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
-    //RUN_TEST(TestExcludeDocumentsWithMinusWordsFromResult);
-    //RUN_TEST(TestMatchDocument);
+    RUN_TEST(TestExcludeStopWordsFromAddedDocumentContent);
+    RUN_TEST(TestExcludeDocumentsWithMinusWordsFromResult);
+    RUN_TEST(TestMatchDocument);
     RUN_TEST(TestSortByRelevance);
-    //RUN_TEST(TestCalculationRating);
-    //RUN_TEST(TestSearchDocumentsByUserPredicate);
-    //RUN_TEST(TestSearchDocumentsByStatus);
-    //RUN_TEST(TestCalculationRelevance);
+    RUN_TEST(TestCalculationRating);
+    RUN_TEST(TestSearchDocumentsByUserPredicate);
+    RUN_TEST(TestSearchDocumentsByStatus);
+    RUN_TEST(TestCalculationRelevance);
 }
 
 
