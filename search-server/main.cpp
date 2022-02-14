@@ -154,9 +154,17 @@ vector<string> SplitIntoWords(const string& text) {
 }
     
 struct Document {
-    int id;
-    double relevance;
-    int rating;
+    int id{0};
+    double relevance{0.0};
+    int rating{0};
+    
+    Document() = default;
+    Document(const int _id, const double _relevance, const int _rating):
+        id{_id},
+        relevance{_relevance},
+        rating{_rating}
+    {        
+    }
 };
 
 enum class DocumentStatus {
@@ -168,6 +176,19 @@ enum class DocumentStatus {
 
 class SearchServer {
 public:
+    SearchServer() = default;
+    explicit SearchServer(const string& stop_words)
+    {
+        SetStopWords(stop_words);
+    }
+    template <typename StringCollection>
+    explicit SearchServer(const StringCollection& stop_words) {        
+        for (const string& word : stop_words) {
+            stop_words_.insert(word);
+        }
+    }
+        
+        
     void SetStopWords(const string& text) {
         for (const string& word : SplitIntoWords(text)) {
             stop_words_.insert(word);
@@ -648,8 +669,19 @@ int main() {
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
     
-    TestSearchServer();
-    /*
+    //TestSearchServer();
+    
+    {
+        const vector<string> stop_words_vector = {"и"s, "в"s, "на"s, ""s, "в"s};
+        SearchServer search_server1(stop_words_vector);
+        
+        // Инициализируем поисковую систему передавая стоп-слова в контейнере set
+        const set<string> stop_words_set = {"и"s, "в"s, "на"s};
+        SearchServer search_server2(stop_words_set);
+        
+        SearchServer search_server3("  и  в на   "s); 
+    }
+    
     SearchServer search_server;
     search_server.SetStopWords("и в на"s);
 
@@ -678,6 +710,6 @@ int main() {
     { return document_id % 2 == 0; })) {
         PrintDocument(document);
     }    //*/
-    cout << "Search server testing finished"s << endl;
+    //cout << "Search server testing finished"s << endl;
     return 0;
 }
