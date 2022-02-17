@@ -82,14 +82,12 @@ public:
     template <typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words)
         : stop_words_(MakeUniqueNonEmptyStrings(stop_words)) {
-        for(const string& word: stop_words_)            
+        if(!all_of(stop_words_.cbegin(), stop_words_.cend(),
+                  [](const string& word){
+                        return IsValidWord(word);
+                    }))
         {
-            if(IsValidWord(word))
-            {
-                continue;
-            }
-            
-            throw invalid_argument{"Contains invalid characters in stop words"};
+            throw invalid_argument{"aaa Contains invalid characters in stop words"};
         }
     }
 
@@ -120,8 +118,7 @@ public:
     template <typename DocumentPredicate>
     vector<Document> FindTopDocuments(const string& raw_query, 
                                         DocumentPredicate document_predicate) const {        
-        Query query = ParseQuery(raw_query);
-        
+        Query query = ParseQuery(raw_query);        
         
         auto matched_documents = FindAllDocuments(query, document_predicate);
 
