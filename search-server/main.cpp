@@ -382,19 +382,14 @@ void MatchDocuments(const SearchServer& search_server, const string& query) {
 }
 
 template <typename Iterator>
-class Paginator {
-        // тело класса
-    public:
-        Paginator(Iterator range_begin, Iterator range_end, int page_size)
-        {            
-        }
-        
-        begin();
-        end();
-}; 
-
+class IteratorRange
+{
+        Iterator begin();
+        Iterator end();
+        int size() const;
+};        
 template <typename Iterator>
-ostream& operator<<(ostream& os, const Paginator<Iterator>& doc)
+ostream& operator<<(ostream& os, const IteratorRange<Iterator>& page)
 {
 //    os<<"{";
 //    os<<" document_id = "<<doc.id;
@@ -402,7 +397,24 @@ ostream& operator<<(ostream& os, const Paginator<Iterator>& doc)
 //    os<<", rating = "<<doc.rating;
 //    os<<" }";
     return os;
-}  
+} 
+
+template <typename Iterator>
+class Paginator {
+        // тело класса
+    public:
+        Paginator(Iterator range_begin, Iterator range_end, int page_size)
+        {            
+        }
+        
+        Iterator begin();
+        Iterator end();
+        
+    protected:
+        vector<IteratorRange<Iterator>> m_pages;
+}; 
+
+ 
 
 template <typename Container>
 auto Paginate(const Container& c, size_t page_size) {
