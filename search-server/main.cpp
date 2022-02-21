@@ -58,6 +58,16 @@ struct Document {
     }
 };
 
+ostream& operator<<(ostream& os, const Document& doc)
+{
+    os<<"{";
+    os<<" document_id = "<<doc.id;
+    os<<", relevance = "<<doc.relevance;
+    os<<", rating = "<<doc.rating;
+    os<<" }";
+    return os;
+}
+
 template <typename StringContainer>
 set<string> MakeUniqueNonEmptyStrings(const StringContainer& strings) {
     set<string> non_empty_strings;
@@ -374,8 +384,26 @@ void MatchDocuments(const SearchServer& search_server, const string& query) {
 template <typename Iterator>
 class Paginator {
         // тело класса
-}; 
+    public:
+        Paginator(Iterator range_begin, Iterator range_end, int page_size)
+        {            
+        }
         
+        begin();
+        end();
+}; 
+
+template <typename Iterator>
+ostream& operator<<(ostream& os, const Paginator<Iterator>& doc)
+{
+//    os<<"{";
+//    os<<" document_id = "<<doc.id;
+//    os<<", relevance = "<<doc.relevance;
+//    os<<", rating = "<<doc.rating;
+//    os<<" }";
+    return os;
+}  
+
 template <typename Container>
 auto Paginate(const Container& c, size_t page_size) {
     return Paginator(begin(c), end(c), page_size);
