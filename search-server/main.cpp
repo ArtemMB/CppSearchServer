@@ -384,18 +384,44 @@ void MatchDocuments(const SearchServer& search_server, const string& query) {
 template <typename Iterator>
 class IteratorRange
 {
-        Iterator begin();
-        Iterator end();
-        int size() const;
+    public:
+        IteratorRange(Iterator range_begin, Iterator range_end, 
+                      size_t page_size):
+            m_begin{range_begin},
+            m_end{range_end},
+            m_size{page_size}
+        {}
+        
+        Iterator begin() const
+        {
+            return m_begin;
+        }
+        
+        Iterator end() const
+        {
+            return m_end;
+        }
+        
+        int size() const
+        {
+            return m_size;
+        }
+        
+    protected:
+        Iterator m_begin;
+        Iterator m_end;
+        size_t m_size;
 };        
 template <typename Iterator>
 ostream& operator<<(ostream& os, const IteratorRange<Iterator>& page)
 {
-//    os<<"{";
-//    os<<" document_id = "<<doc.id;
-//    os<<", relevance = "<<doc.relevance;
-//    os<<", rating = "<<doc.rating;
-//    os<<" }";
+    Iterator b{page.begin()};
+    while(b != page.end())
+    {
+        os<<*b;
+        advance(b, 1);
+    }
+    
     return os;
 } 
 
@@ -403,12 +429,64 @@ template <typename Iterator>
 class Paginator {
         // тело класса
     public:
-        Paginator(Iterator range_begin, Iterator range_end, int page_size)
-        {            
+        Paginator(Iterator range_begin, Iterator range_end, size_t page_size)
+        {     
+            Iterator first;
+            uint8_t state = 0;
+            size_t counter = 0;
+            while(range_begin != range_end)
+            {
+                switch (state)
+                {
+                    case 0:
+                    {
+                        first = range_begin;
+                        state = 1;
+                        counter = 1;
+                    }
+                    break;
+                        
+                    case 1:
+                    {                   
+                        counter++;
+                        if(page_size >= counter )
+                        {
+                            break;
+                        }
+                        
+                        counter = 1;                        
+                        
+                        IteratorRange<Iterator> item(first, range_begin, 
+                                                page_size);
+                        //cout<<item<<endl;
+                        m_pages.push_back(item);
+                        
+                        first = range_begin;
+                    }
+                    break;
+                }
+                
+                advance(range_begin, 1);                
+            }
+            
+            if(counter)
+            {
+                IteratorRange<Iterator> item(first, range_end, 
+                                        page_size);
+                //cout<<"last "<<item<<endl;
+                m_pages.push_back(item);
+            }
+        }
+                
+        auto begin() const 
+        {
+            return m_pages.cbegin();
         }
         
-        Iterator begin();
-        Iterator end();
+        auto end() const
+        {
+            return m_pages.cend();
+        }
         
     protected:
         vector<IteratorRange<Iterator>> m_pages;
@@ -418,7 +496,7 @@ class Paginator {
 
 template <typename Container>
 auto Paginate(const Container& c, size_t page_size) {
-    return Paginator(begin(c), end(c), page_size);
+    return Paginator{begin(c), end(c), page_size};
 }
         
 int main() {
@@ -446,3 +524,5 @@ int main() {
     
     return 0;
 }
+
+
