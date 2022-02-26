@@ -1,9 +1,13 @@
-#ifndef DOCUMENT_H
-#define DOCUMENT_H
-
 #pragma once
 
 #include <iostream>
+
+enum class DocumentStatus {
+    ACTUAL,
+    IRRELEVANT,
+    BANNED,
+    REMOVED,
+};
 
 struct Document {
     int id{0};
@@ -16,4 +20,3 @@ struct Document {
 
 std::ostream& operator<<(std::ostream& os, const Document& doc);
 
-#endif // DOCUMENT_H
