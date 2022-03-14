@@ -52,12 +52,15 @@ void SearchServer::AddDocument(int document_id, const string& document, Document
     vector<string> words = SplitIntoWordsNoStop(document);        
     
     const double inv_word_count = 1.0 / words.size();
+    map<string, double> wordFrequencies;
+    
     for (const string& word : words) {
         word_to_document_freqs_[word][document_id] += inv_word_count;
+        wordFrequencies[word] = word_to_document_freqs_[word][document_id];
     }
     documents_.emplace(document_id, 
                        DocumentData{ComputeAverageRating(ratings), 
-                                    status});
+                                    status, wordFrequencies});
     document_ids_.push_back(document_id);        
 }
 
@@ -76,14 +79,6 @@ vector<Document> SearchServer::FindTopDocuments(const string& raw_query) const {
 int SearchServer::GetDocumentCount() const {
     return documents_.size();
 }
-
-/*int SearchServer::GetDocumentId(int index) const {
-    if (index == 0)
-    {
-        throw invalid_argument{"index is null"};
-    }
-    return document_ids_.at(index);
-}*/
 
 tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& raw_query, int document_id) const { 
     Query query = ParseQuery(raw_query);        
@@ -109,6 +104,28 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& 
     tuple<vector<string>, DocumentStatus> out{matched_words, 
                 documents_.at(document_id).status};
     return out;        
+}
+
+void SearchServer::RemoveDocument(int document_id)
+{
+    map<string, double> words{SearchServer::GetWordFrequencies(document_id)};
+    //word_to_document_freqs_
+    //удалить слово если нет больше документов с ним
+    documents_.erase(document_id);
+    document_ids_.erase(
+                remove(document_ids_.begin(), document_ids_.end(), document_id), 
+                document_ids_.end());
+}
+
+const std::map<string, double>& SearchServer::GetWordFrequencies(int document_id) const
+{
+    
+    if(documents_.count(document_id) > 0)
+    {
+        return documents_.at(document_id).wordFrequencies;
+    }
+    
+    return emptyWordFrequencies;
 }
 
 vector<int>::iterator SearchServer::begin()

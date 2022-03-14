@@ -34,13 +34,12 @@ public:
 
     int GetDocumentCount() const;
 
-    //int GetDocumentId(int index) const;//TODO remove
-
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(
             const std::string& raw_query, int document_id) const;
     
     void RemoveDocument(int document_id);//TODO
     const std::map<std::string, double>& GetWordFrequencies(int document_id) const;//TODO
+    
     std::vector<int>::iterator begin(); 
     std::vector<int>::iterator end(); 
     
@@ -51,12 +50,14 @@ private:
     struct DocumentData {
         int rating;
         DocumentStatus status;
+        std::map<std::string, double> wordFrequencies;
     };
     const std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
-    std::map<int, DocumentData> documents_;
+    std::map<int, DocumentData> documents_;//TODO поменять для GetWordFrequencies
     std::vector<int> document_ids_;
-
+    std::map<std::string, double> emptyWordFrequencies;
+    
     bool IsStopWord(const std::string& word) const;
 
     static bool IsValidWord(const std::string& word);
@@ -96,7 +97,7 @@ SearchServer::SearchServer(const StringContainer& stop_words)
                     return IsValidWord(word);
                 }))
     {
-        throw std::invalid_argument{"aaa Contains invalid characters in stop words"};
+        throw std::invalid_argument{"Contains invalid characters in stop words"};
     }
 }
 
