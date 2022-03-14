@@ -34,11 +34,19 @@ public:
 
     int GetDocumentCount() const;
 
-    int GetDocumentId(int index) const;
+    //int GetDocumentId(int index) const;//TODO remove
 
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(
             const std::string& raw_query, int document_id) const;
-
+    
+    void RemoveDocument(int document_id);//TODO
+    const std::map<std::string, double>& GetWordFrequencies(int document_id) const;//TODO
+    std::vector<int>::iterator begin(); 
+    std::vector<int>::iterator end(); 
+    
+    std::vector<int>::const_iterator begin() const; 
+    std::vector<int>::const_iterator end() const; 
+    
 private:
     struct DocumentData {
         int rating;

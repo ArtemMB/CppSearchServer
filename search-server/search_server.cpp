@@ -77,13 +77,13 @@ int SearchServer::GetDocumentCount() const {
     return documents_.size();
 }
 
-int SearchServer::GetDocumentId(int index) const {
+/*int SearchServer::GetDocumentId(int index) const {
     if (index == 0)
     {
         throw invalid_argument{"index is null"};
     }
     return document_ids_.at(index);
-}
+}*/
 
 tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& raw_query, int document_id) const { 
     Query query = ParseQuery(raw_query);        
@@ -109,6 +109,26 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& 
     tuple<vector<string>, DocumentStatus> out{matched_words, 
                 documents_.at(document_id).status};
     return out;        
+}
+
+vector<int>::iterator SearchServer::begin()
+{
+    return document_ids_.begin();
+}
+
+vector<int>::iterator SearchServer::end()
+{
+    return document_ids_.end();
+}
+
+vector<int>::const_iterator SearchServer::begin() const
+{
+    return document_ids_.cbegin();
+}
+
+vector<int>::const_iterator SearchServer::end() const
+{
+    return document_ids_.cend();
 }
 
 bool SearchServer::IsStopWord(const string& word) const {
