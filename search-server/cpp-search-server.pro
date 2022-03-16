@@ -22,4 +22,4 @@ HEADERS += \
     request_queue.h \
     search_server.h \
     string_processing.h \
-    test_example_functions.hpp
+    test_example_functions.h

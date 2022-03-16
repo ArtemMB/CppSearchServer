@@ -2,7 +2,7 @@
 
 #include "search_server.h"
 #include "remove_duplicates.h"
-#include "test_example_functions.hpp"
+#include "test_example_functions.h"
 
 using namespace std;
 
