@@ -1,7 +1,9 @@
 #include <iostream>
 
-#include "remove_duplicates.h"
+
 #include "search_server.h"
+
+#include "remove_duplicates.h"
 
 using namespace std;
 
