@@ -4,8 +4,6 @@
 #include "search_server.h"
 
 using namespace std;
-
-
     
 
 SearchServer::SearchServer(const string& stop_words_text)
