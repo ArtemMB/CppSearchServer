@@ -10,7 +10,8 @@ SOURCES += \
         remove_duplicates.cpp \
         request_queue.cpp \
         search_server.cpp \
-        string_processing.cpp
+        string_processing.cpp \
+        test_example_functions.cpp
 
 HEADERS += \
     document.h \
@@ -19,4 +20,5 @@ HEADERS += \
     remove_duplicates.h \
     request_queue.h \
     search_server.h \
-    string_processing.h
+    string_processing.h \
+    test_example_functions.hpp

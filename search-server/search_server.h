@@ -56,6 +56,8 @@ private:
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
     std::map<int, DocumentData> documents_;//TODO поменять для GetWordFrequencies
     std::vector<int> document_ids_;
+    
+    //заглушка для GetWordFrequencies
     std::map<std::string, double> emptyWordFrequencies;
     
     bool IsStopWord(const std::string& word) const;

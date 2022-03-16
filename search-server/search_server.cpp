@@ -34,7 +34,8 @@ std::vector<Document> SearchServer::FindAllDocuments(const Query& query,
 
     std::vector<Document> matched_documents;
     for (const auto [document_id, relevance] : document_to_relevance) {
-        matched_documents.push_back({document_id, relevance, documents_.at(document_id).rating});
+        matched_documents.push_back({document_id, relevance, 
+                                     documents_.at(document_id).rating});
     }
     return matched_documents;
 }      
@@ -44,7 +45,10 @@ SearchServer::SearchServer(const string& stop_words_text)
 {
 }
 
-void SearchServer::AddDocument(int document_id, const string& document, DocumentStatus status, const vector<int>& ratings) {
+void SearchServer::AddDocument(int document_id, 
+                               const string& document, 
+                               DocumentStatus status, 
+                               const vector<int>& ratings) {
     if ((document_id < 0) || (documents_.count(document_id) > 0)) {
         throw invalid_argument{"document_id is invalid"};
     }
@@ -64,10 +68,12 @@ void SearchServer::AddDocument(int document_id, const string& document, Document
     document_ids_.push_back(document_id);        
 }
 
-vector<Document> SearchServer::FindTopDocuments(const string& raw_query, DocumentStatus status) const {
+vector<Document> SearchServer::FindTopDocuments(const string& raw_query, 
+                                                DocumentStatus status) const {
     return FindTopDocuments(
                 raw_query,
-                [status](int document_id, DocumentStatus document_status, int rating) {
+                [status](int , 
+                DocumentStatus document_status, int ) {
         return document_status == status;
     });
 }
@@ -80,7 +86,8 @@ int SearchServer::GetDocumentCount() const {
     return documents_.size();
 }
 
-tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& raw_query, int document_id) const { 
+tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(
+        const string& raw_query, int document_id) const { 
     Query query = ParseQuery(raw_query);        
     
     vector<string> matched_words;
@@ -109,8 +116,16 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(const string& 
 void SearchServer::RemoveDocument(int document_id)
 {
     map<string, double> words{SearchServer::GetWordFrequencies(document_id)};
-    //word_to_document_freqs_
-    //удалить слово если нет больше документов с ним
+    for(auto&[word, freq]: words)
+    {
+        word_to_document_freqs_[word].erase(document_id);  
+        
+        if(word_to_document_freqs_[word].empty())
+        {
+            word_to_document_freqs_.erase(word);//удаляем, т.к. слово больше не нужно
+        }
+    }
+    
     documents_.erase(document_id);
     document_ids_.erase(
                 remove(document_ids_.begin(), document_ids_.end(), document_id), 
@@ -118,9 +133,9 @@ void SearchServer::RemoveDocument(int document_id)
 }
 
 const std::map<string, double>& SearchServer::GetWordFrequencies(int document_id) const
-{
-    
-    if(documents_.count(document_id) > 0)
+{    
+    auto it = documents_.find(document_id);
+    if(it != documents_.end())
     {
         return documents_.at(document_id).wordFrequencies;
     }
