@@ -37,8 +37,8 @@ public:
     std::tuple<std::vector<std::string>, DocumentStatus> MatchDocument(
             const std::string& raw_query, int document_id) const;
     
-    void RemoveDocument(int document_id);//TODO
-    const std::map<std::string, double>& GetWordFrequencies(int document_id) const;//TODO
+    void RemoveDocument(int document_id);
+    const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
     
     std::vector<int>::iterator begin(); 
     std::vector<int>::iterator end(); 

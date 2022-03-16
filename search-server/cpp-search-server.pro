@@ -15,6 +15,7 @@ SOURCES += \
 
 HEADERS += \
     document.h \
+    logduration.h \
     paginator.h \
     read_input_functions.h \
     remove_duplicates.h \
