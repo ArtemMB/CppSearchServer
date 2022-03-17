@@ -1,4 +1,6 @@
 #include <iostream>
+#include <algorithm>
+#include <iterator>
 
 #include "search_server.h"
 
@@ -7,29 +9,31 @@
 
 using namespace std;
 
-
-set<string> mapToSet(const map<string, double>& m)
+template <typename Key, typename Value>
+set<Key> ExtractKeysFromMap(const map<Key, Value>& container)
 {
-    set<string> out;
-    
-    for(const auto& item: m)
-    {
-        out.insert(item.first);
-    }
+    set<Key> out;
+        
+    transform(container.begin(), container.end(), 
+              insert_iterator(out, out.begin()),
+              [](const auto& key_value){
+        return key_value.first;
+    });
     
     return out;            
 }
 
 void RemoveDuplicates(SearchServer& search_server)
 {
-    set<int> duplicateForRemove;
+    set<int> duplicate_for_remove;
     
     set<set<string>> verified;
     
     for(const int document_id : search_server)
     {
-        set<string> wordsOfDocument = mapToSet(
-                    search_server.GetWordFrequencies(document_id));
+        set<string> wordsOfDocument = ExtractKeysFromMap(
+                                          search_server.GetWordFrequencies(
+                                              document_id));
         
         if(0 == verified.count(wordsOfDocument))
         {
@@ -37,10 +41,10 @@ void RemoveDuplicates(SearchServer& search_server)
             continue;
         }
         
-        duplicateForRemove.insert(document_id);
+        duplicate_for_remove.insert(document_id);
     }
     
-    for(const int id: duplicateForRemove)
+    for(const int id: duplicate_for_remove)
     {
         search_server.RemoveDocument(id);
         cout<<"Found duplicate document id "<<id<<"\n";

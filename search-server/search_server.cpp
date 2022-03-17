@@ -98,9 +98,9 @@ void SearchServer::RemoveDocument(int document_id)
     document_ids_.erase(document_id);
 }
 
-const std::map<string, double>& SearchServer::GetWordFrequencies(int document_id) const
+const map<string, double>& SearchServer::GetWordFrequencies(int document_id) const
 {    
-    static map<string, double> emptyWordFrequencies;
+    static map<string, double> empty_word_frequencies;
     
     auto it = documents_.find(document_id);
     if(it != documents_.end())
@@ -108,7 +108,7 @@ const std::map<string, double>& SearchServer::GetWordFrequencies(int document_id
         return document_to_word_freqs_.at(document_id);
     }
     
-    return emptyWordFrequencies;
+    return empty_word_frequencies;
 }
 
 set<int>::iterator SearchServer::begin()
