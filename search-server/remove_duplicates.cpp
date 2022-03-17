@@ -1,48 +1,43 @@
 #include <iostream>
 
-
 #include "search_server.h"
 
 #include "remove_duplicates.h"
 
+
 using namespace std;
+
+
+set<string> mapToSet(const map<string, double>& m)
+{
+    set<string> out;
+    
+    for(const auto& item: m)
+    {
+        out.insert(item.first);
+    }
+    
+    return out;            
+}
 
 void RemoveDuplicates(SearchServer& search_server)
 {
     set<int> duplicateForRemove;
-   
-    std::set<int>::const_iterator it = search_server.begin();
-    std::set<int>::const_iterator end = search_server.end();
     
-    for(; it != std::prev(end); advance(it, 1))    
+    set<set<string>> verified;
+    
+    for(const int document_id : search_server)
     {
-        if(duplicateForRemove.count(*it))
+        set<string> wordsOfDocument = mapToSet(
+                    search_server.GetWordFrequencies(document_id));
+        
+        if(0 == verified.count(wordsOfDocument))
         {
+            verified.insert(wordsOfDocument);
             continue;
         }
         
-        map<string, double> currentWords{search_server.GetWordFrequencies(*it)};
-        
-        std::set<int>::const_iterator iit = std::next(it);
-        
-        for(; iit != end; advance(iit, 1))
-        {
-            map<string, double> words{search_server.GetWordFrequencies(*iit)};
-            
-            if(currentWords.size() != words.size())
-            {
-                continue;
-            }
-            
-            if(!equal(currentWords.cbegin(), currentWords.cend(), words.cbegin(),
-                      [](auto a, auto b){
-                      return a.first == b.first;}))
-            {
-                continue;
-            }
-            
-            duplicateForRemove.insert(*iit);
-        }
+        duplicateForRemove.insert(document_id);
     }
     
     for(const int id: duplicateForRemove)
