@@ -30,8 +30,11 @@ void SearchServer::AddDocument(int document_id,
     }
     documents_.emplace(document_id, 
                        DocumentData{ComputeAverageRating(ratings), 
-                                    status, wordFrequencies});
-    document_ids_.push_back(document_id);        
+                                    status});
+    
+    document_to_word_freqs_.emplace(document_id, wordFrequencies);
+    
+    document_ids_.insert(document_id);        
 }
 
 vector<Document> SearchServer::FindTopDocuments(const string& raw_query, 
@@ -80,9 +83,8 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(
 }
 
 void SearchServer::RemoveDocument(int document_id)
-{
-    map<string, double> words{SearchServer::GetWordFrequencies(document_id)};
-    for(auto&[word, freq]: words)
+{    
+    for(auto&[word, freq]: document_to_word_freqs_.at(document_id))
     {
         word_to_document_freqs_[word].erase(document_id);  
         
@@ -93,38 +95,38 @@ void SearchServer::RemoveDocument(int document_id)
     }
     
     documents_.erase(document_id);
-    document_ids_.erase(
-                remove(document_ids_.begin(), document_ids_.end(), document_id), 
-                document_ids_.end());
+    document_ids_.erase(document_id);
 }
 
 const std::map<string, double>& SearchServer::GetWordFrequencies(int document_id) const
 {    
+    static map<string, double> emptyWordFrequencies;
+    
     auto it = documents_.find(document_id);
     if(it != documents_.end())
     {
-        return documents_.at(document_id).wordFrequencies;
+        return document_to_word_freqs_.at(document_id);
     }
     
     return emptyWordFrequencies;
 }
 
-vector<int>::iterator SearchServer::begin()
+set<int>::iterator SearchServer::begin()
 {
     return document_ids_.begin();
 }
 
-vector<int>::iterator SearchServer::end()
+set<int>::iterator SearchServer::end()
 {
     return document_ids_.end();
 }
 
-vector<int>::const_iterator SearchServer::begin() const
+set<int>::const_iterator SearchServer::begin() const
 {
     return document_ids_.cbegin();
 }
 
-vector<int>::const_iterator SearchServer::end() const
+set<int>::const_iterator SearchServer::end() const
 {
     return document_ids_.cend();
 }

@@ -9,21 +9,21 @@ using namespace std;
 
 void RemoveDuplicates(SearchServer& search_server)
 {
-    set<int> documentForDelete;
+    set<int> duplicateForRemove;
    
-    std::vector<int>::const_iterator it = search_server.begin();
-    std::vector<int>::const_iterator end = search_server.end();
+    std::set<int>::const_iterator it = search_server.begin();
+    std::set<int>::const_iterator end = search_server.end();
     
     for(; it != std::prev(end); advance(it, 1))    
     {
-        if(documentForDelete.count(*it))
+        if(duplicateForRemove.count(*it))
         {
             continue;
         }
         
         map<string, double> currentWords{search_server.GetWordFrequencies(*it)};
         
-        std::vector<int>::const_iterator iit = std::next(it);
+        std::set<int>::const_iterator iit = std::next(it);
         
         for(; iit != end; advance(iit, 1))
         {
@@ -41,11 +41,11 @@ void RemoveDuplicates(SearchServer& search_server)
                 continue;
             }
             
-            documentForDelete.insert(*iit);
+            duplicateForRemove.insert(*iit);
         }
     }
     
-    for(const int id: documentForDelete)
+    for(const int id: duplicateForRemove)
     {
         search_server.RemoveDocument(id);
         cout<<"Found duplicate document id "<<id<<"\n";

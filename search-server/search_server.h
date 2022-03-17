@@ -9,7 +9,6 @@
 #include "string_processing.h"
 
 
-
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 const double EPSILON = 1e-6;
 
@@ -41,25 +40,23 @@ public:
     void RemoveDocument(int document_id);
     const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
     
-    std::vector<int>::iterator begin(); 
-    std::vector<int>::iterator end(); 
+    std::set<int>::iterator begin(); 
+    std::set<int>::iterator end(); 
     
-    std::vector<int>::const_iterator begin() const; 
-    std::vector<int>::const_iterator end() const; 
+    std::set<int>::const_iterator begin() const; 
+    std::set<int>::const_iterator end() const; 
     
 private:
     struct DocumentData {
         int rating;
         DocumentStatus status;
-        std::map<std::string, double> wordFrequencies;
+        //std::map<std::string, double> wordFrequencies;
     };
     const std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
     std::map<int, DocumentData> documents_;//TODO поменять для GetWordFrequencies
-    std::vector<int> document_ids_;
-    
-    //заглушка для GetWordFrequencies
-    std::map<std::string, double> emptyWordFrequencies;
+    std::set<int> document_ids_;
+    std::map<int, std::map<std::string, double>> document_to_word_freqs_;
     
     bool IsStopWord(const std::string& word) const;
 
