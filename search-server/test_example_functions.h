@@ -4,4 +4,4 @@
 
 void TestRemoveDuplication();
 
-
+void TestSingleLinkedList();
