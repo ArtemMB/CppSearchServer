@@ -7,3 +7,5 @@ void TestRemoveDuplication();
 
 void TestParalelQuery();
 
+void TestProcessQueriesJoined();
+
