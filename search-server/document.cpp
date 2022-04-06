@@ -1,3 +1,6 @@
+#include <utility>
+ 
+
 #include "document.h"
 
 using namespace std;
@@ -8,6 +11,7 @@ Document::Document(const int _id, const double _relevance, const int _rating):
     rating{_rating}
 {        
 }
+
 
 ostream& operator<<(ostream& os, const Document& doc)
 {

@@ -15,7 +15,7 @@ struct Document {
     int rating{0};
     
     Document() = default;
-    Document(const int _id, const double _relevance, const int _rating);
+    Document(const int _id, const double _relevance, const int _rating);     
 };
 
 std::ostream& operator<<(std::ostream& os, const Document& doc);
