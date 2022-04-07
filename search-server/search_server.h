@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <execution>
 
 #include "document.h"
 #include "string_processing.h"
@@ -38,6 +39,11 @@ public:
             const std::string& raw_query, int document_id) const;
     
     void RemoveDocument(int document_id);
+    void RemoveDocument(const std::execution::parallel_policy& policy, 
+                        int document_id); 
+    void RemoveDocument(const std::execution::sequenced_policy& policy, 
+                        int document_id); 
+    
     const std::map<std::string, double>& GetWordFrequencies(int document_id) const;
     
     std::set<int>::iterator begin(); 

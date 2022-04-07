@@ -54,34 +54,46 @@ vector<string> GenerateQueries(mt19937& generator, const vector<string>& diction
     return queries;
 }
 
-template <typename QueriesProcessor>
-void Test(string_view mark, QueriesProcessor processor, const SearchServer& search_server, const vector<string>& queries) {
+template <typename ExecutionPolicy>
+void Test(string_view mark, SearchServer search_server, ExecutionPolicy&& policy) {
     LOG_DURATION(mark);
-    const auto documents_lists = processor(search_server, queries);
+    const int document_count = search_server.GetDocumentCount();
+    for (int id = 0; id < document_count; ++id) {
+        search_server.RemoveDocument(policy, id);
+    }
+    cout << search_server.GetDocumentCount() << endl;
 }
 
-#define TEST(processor) Test(#processor, processor, search_server, queries)
-
+#define TEST(mode) Test(#mode, search_server, execution::mode)
 
 int main() {
     //выключить в конcоли винды utf-8
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
     
-    TestProcessQueriesJoined();
+    TestRemoveDocument();
     
     mt19937 generator;
-    const auto dictionary = GenerateDictionary(generator, 2'000, 25);
-    const auto documents = GenerateQueries(generator, dictionary, 20'000, 10);
-
-    SearchServer search_server(dictionary[0]);
-    for (size_t i = 0; i < documents.size(); ++i) {
-        search_server.AddDocument(i, documents[i], DocumentStatus::ACTUAL, {1, 2, 3});
-    }
-
-    const auto queries = GenerateQueries(generator, dictionary, 2'000, 7);
-    TEST(ProcessQueriesJoined);
     
+    const auto dictionary = GenerateDictionary(generator, 10'000, 25);
+    const auto documents = GenerateQueries(generator, dictionary, 10'000, 100);
+
+    {
+        SearchServer search_server(dictionary[0]);
+        for (size_t i = 0; i < documents.size(); ++i) {
+            search_server.AddDocument(i, documents[i], DocumentStatus::ACTUAL, {1, 2, 3});
+        }
+
+        TEST(seq);
+    }
+    {
+        SearchServer search_server(dictionary[0]);
+        for (size_t i = 0; i < documents.size(); ++i) {
+            search_server.AddDocument(i, documents[i], DocumentStatus::ACTUAL, {1, 2, 3});
+        }
+
+        TEST(par);
+    }
     return 0;
 }
 

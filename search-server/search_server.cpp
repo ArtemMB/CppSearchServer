@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <cmath>
+#include <list>
+#include <numeric>
 
 #include "search_server.h"
 
@@ -84,6 +86,11 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(
 
 void SearchServer::RemoveDocument(int document_id)
 {    
+    if(0 == document_ids_.count(document_id))
+    {
+        return;
+    }
+    
     for(auto&[word, freq]: document_to_word_freqs_.at(document_id))
     {
         word_to_document_freqs_[word].erase(document_id);  
@@ -96,6 +103,49 @@ void SearchServer::RemoveDocument(int document_id)
     
     documents_.erase(document_id);
     document_ids_.erase(document_id);
+    document_to_word_freqs_.erase(document_id);
+}
+
+void SearchServer::RemoveDocument(const std::execution::parallel_policy& policy, 
+                                  int document_id)
+{
+    if(0 == document_ids_.count(document_id))
+    {
+        return;
+    }
+    
+    const std::map<std::string, double>& words{document_to_word_freqs_[document_id]};
+    
+    list<string> for_remove{transform_reduce(policy, words.begin(), words.end(),
+                                             list<string>{},
+                                         [](const list<string>& accum, const list<string>& data){
+                                             list<string> out{accum.begin(), accum.end()};
+                                             out.insert(out.end(), data.begin(), data.end());
+                                             return out;
+                                             },
+                                             [this, document_id](const auto& item)
+        {
+            std::map<int, double>& _data{this->word_to_document_freqs_[item.first]};
+            _data.erase(document_id); 
+            
+            return _data.empty() ? list<string>{item.first}: list<string>{};            
+            
+        })};
+    
+    for(const string& word: for_remove)
+    {
+        word_to_document_freqs_.erase(word);
+    }    
+    
+    documents_.erase(document_id);
+    document_ids_.erase(document_id);
+    document_to_word_freqs_.erase(document_id);
+}
+
+void SearchServer::RemoveDocument(const std::execution::sequenced_policy& policy, 
+                                  int document_id)
+{
+    RemoveDocument(document_id);
 }
 
 const map<string, double>& SearchServer::GetWordFrequencies(int document_id) const

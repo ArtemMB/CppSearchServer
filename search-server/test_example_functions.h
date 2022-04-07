@@ -9,3 +9,4 @@ void TestParalelQuery();
 
 void TestProcessQueriesJoined();
 
+void TestRemoveDocument();
