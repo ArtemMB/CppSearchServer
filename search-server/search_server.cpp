@@ -1,8 +1,7 @@
 #include <algorithm>
 #include <cmath>
-#include <list>
-#include <numeric>
-#include <functional>
+
+
 #include "search_server.h"
 
 using namespace std;
