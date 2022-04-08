@@ -2,7 +2,7 @@
 #include <cmath>
 #include <list>
 #include <numeric>
-
+#include <functional>
 #include "search_server.h"
 
 using namespace std;
@@ -109,54 +109,29 @@ void SearchServer::RemoveDocument(int document_id)
 void SearchServer::RemoveDocument(const std::execution::parallel_policy& policy, 
                                   int document_id)
 {
-    if(0 == document_ids_.count(document_id))
+    const std::map<std::string, double>& words_freqs{
+        GetWordFrequencies(document_id)};
+    if(!words_freqs.empty())
     {
-        return;
+        std::vector<const string*> words{words_freqs.size(),
+                    nullptr};
+        
+        transform(policy, 
+                  words_freqs.begin(), words_freqs.end(), 
+                  words.begin(),
+                  [](const auto& wf)
+        {
+            return &wf.first;
+        });
+        
+        
+        auto trans = [this, document_id](const string* item)
+        {
+            word_to_document_freqs_[*item].erase(document_id);             
+        };    
+        
+        for_each(policy, words.begin(), words.end(), trans);    
     }
-    
-    const std::map<std::string, double>& words{document_to_word_freqs_[document_id]};
-    
-    auto glue = [](const list<string>& accum, const list<string>& data){
-        if(accum.empty())
-        {
-            return data;
-        }
-        
-        if(data.empty())
-        {
-            return list<string>{};
-        }
-        
-        list<string> out{accum.begin(), accum.end()};
-        out.insert(out.end(), data.begin(), data.end());
-        return out;
-    };
-    
-    auto trans =  [this, document_id](const auto& item)
-    {
-        std::map<int, double>& _data{this->word_to_document_freqs_[item.first]};
-        _data.erase(document_id); 
-        if(_data.empty())
-        {
-            return list<string>{item.first};
-        }
-        return list<string>{};
-        
-//        return _data.empty() ? list<string>{item.first}: list<string>{};            
-//        
-    };
-    
-    list<string> for_remove{
-        transform_reduce(policy, 
-                         words.begin(), words.end(),
-                         list<string>{},
-                         glue,
-                         trans)};
-    
-    for(const string& word: for_remove)
-    {
-        word_to_document_freqs_.erase(word);
-    }    
     
     documents_.erase(document_id);
     document_ids_.erase(document_id);

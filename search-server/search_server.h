@@ -6,12 +6,14 @@
 #include <set>
 #include <execution>
 
+
 #include "document.h"
 #include "string_processing.h"
 
 
 const int MAX_RESULT_DOCUMENT_COUNT = 5;
 const double EPSILON = 1e-6;
+
 
 class SearchServer {
 public:    
@@ -57,6 +59,8 @@ private:
         int rating;
         DocumentStatus status;        
     };
+    
+    
     const std::set<std::string> stop_words_;
     std::map<std::string, std::map<int, double>> word_to_document_freqs_;
     std::map<int, DocumentData> documents_;
