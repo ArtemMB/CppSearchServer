@@ -9,8 +9,14 @@
 using namespace std;
     
 
+SearchServer::SearchServer(const string_view stop_words_text):
+    SearchServer{SplitIntoWords(stop_words_text)}
+{
+    
+}
+
 SearchServer::SearchServer(const string& stop_words_text)
-    : SearchServer(SplitIntoWords(stop_words_text))  // Invoke delegating constructor from string container
+    : SearchServer(string_view(stop_words_text))  // Invoke delegating constructor from string container
 {
 }
 
@@ -71,7 +77,7 @@ tuple<vector<string_view>, DocumentStatus> SearchServer::MatchDocument(
     
     Query query = ParseQuery(raw_query);        
     
-    vector<string> matched_words;  
+    vector<string_view> matched_words;  
     
     const std::map<std::string, double>& words_freqs{
         document_to_word_freqs_.at(document_id)};
@@ -90,8 +96,7 @@ tuple<vector<string_view>, DocumentStatus> SearchServer::MatchDocument(
         }
     }    
     
-    return {{matched_words.begin(), matched_words.end()}, 
-                documents_.at(document_id).status};        
+    return {matched_words, documents_.at(document_id).status};        
 }
 
 std::tuple<std::vector<string_view>, DocumentStatus> 
@@ -156,7 +161,10 @@ void SearchServer::RemoveDocument(int document_id)
         return;
     }
     
-    for(auto&[word, freq]: document_to_word_freqs_.at(document_id))
+    const map<string, double>& words_freqs{
+        document_to_word_freqs_.at(document_id)};
+    
+    for(auto&[word, freq]: words_freqs)
     {
         word_to_document_freqs_[word].erase(document_id);  
         
@@ -214,15 +222,23 @@ void SearchServer::RemoveDocument(
 const map<string_view, double>& SearchServer::GetWordFrequencies(
         int document_id) const
 {    
-    static map<string_view, double> empty_word_frequencies;
+    /*static map<string_view, double> empty_word_frequencies;
     
     auto it = documents_.find(document_id);
     if(it != documents_.end())
-    {
-        //return document_to_word_freqs_.at(document_id);
+    {        
+        return document_to_word_freqs_.at(document_id);
     }
     
-    return empty_word_frequencies;
+    return empty_word_frequencies;*/
+    static map<string_view, double> result;
+    if (!document_to_word_freqs_.count(document_id)) {
+        return result;
+    }
+    for (const auto& [k, v] : document_to_word_freqs_.at(document_id)) {
+        result.insert(pair{string_view(k), v});
+    }
+    return result;
 }
 
 set<int>::iterator SearchServer::begin()

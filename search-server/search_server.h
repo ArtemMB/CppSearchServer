@@ -19,7 +19,7 @@ class SearchServer {
 public:    
     template <typename StringContainer>
     explicit SearchServer(const StringContainer& stop_words);
-
+    explicit SearchServer(const std::string_view stop_words_text);
     explicit SearchServer(const std::string& stop_words_text);
 
     void AddDocument(int document_id, const std::string_view& document, 
@@ -100,8 +100,8 @@ private:
     QueryWordView ParseQueryWord(std::string_view text) const;
     
     struct Query {
-        std::set<std::string> plus_words;
-        std::set<std::string> minus_words;
+        std::set<std::string, std::less<>> plus_words;
+        std::set<std::string, std::less<>> minus_words;
     };
 
     Query ParseQuery(const std::string_view& text) const;
