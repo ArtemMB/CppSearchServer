@@ -22,7 +22,9 @@ string GenerateWord(mt19937& generator, int max_length) {
     return word;
 }
 
-vector<string> GenerateDictionary(mt19937& generator, int word_count, int max_length) {
+vector<string> GenerateDictionary(mt19937& generator, 
+                                  int word_count, 
+                                  int max_length) {
     vector<string> words;
     words.reserve(word_count);
     for (int i = 0; i < word_count; ++i) {
@@ -33,7 +35,10 @@ vector<string> GenerateDictionary(mt19937& generator, int word_count, int max_le
     return words;
 }
 
-string GenerateQuery(mt19937& generator, const vector<string>& dictionary, int word_count, double minus_prob = 0) {
+string GenerateQuery(mt19937& generator, 
+                     const vector<string>& dictionary, 
+                     int word_count, 
+                     double minus_prob = 0) {
     string query;
     for (int i = 0; i < word_count; ++i) {
         if (!query.empty()) {
@@ -47,7 +52,10 @@ string GenerateQuery(mt19937& generator, const vector<string>& dictionary, int w
     return query;
 }
 
-vector<string> GenerateQueries(mt19937& generator, const vector<string>& dictionary, int query_count, int max_word_count) {
+vector<string> GenerateQueries(mt19937& generator, 
+                               const vector<string>& dictionary, 
+                               int query_count, 
+                               int max_word_count) {
     vector<string> queries;
     queries.reserve(query_count);
     for (int i = 0; i < query_count; ++i) {
@@ -62,7 +70,8 @@ void Test(string_view mark, SearchServer search_server, const string& query, Exe
     const int document_count = search_server.GetDocumentCount();
     int word_count = 0;
     for (int id = 0; id < document_count; ++id) {
-        const auto [words, status] = search_server.MatchDocument(policy, query, id);
+        const auto [words, status] =
+                search_server.MatchDocument(policy, query, id);
         word_count += words.size();
     }
     cout << word_count << endl;
@@ -75,7 +84,8 @@ int main() {
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
     
-    TestMatchDocument();
+    //TestRemoveDocument();
+    //TestMatchDocument();
     
     mt19937 generator;
     

@@ -27,11 +27,11 @@ void RemoveDuplicates(SearchServer& search_server)
 {
     set<int> duplicate_for_remove;
     
-    set<set<string>> verified;
+    set<set<string_view>> verified;
     
     for(const int document_id : search_server)
     {
-        set<string> wordsOfDocument = ExtractKeysFromMap(
+        set<string_view> wordsOfDocument = ExtractKeysFromMap(
                                           search_server.GetWordFrequencies(
                                               document_id));
         
@@ -53,7 +53,7 @@ void RemoveDuplicates(SearchServer& search_server)
 
 void AddDocument(SearchServer& search_server, 
                  int document_id, 
-                 const std::string& document,
+                 const string_view& document,
                  DocumentStatus status, 
                  const std::vector<int>& ratings)
 {
@@ -65,7 +65,7 @@ void AddDocument(SearchServer& search_server,
 }
 
 void FindTopDocuments(const SearchServer& search_server, 
-                      const std::string& raw_query)
+                      const string_view& raw_query)
 {
     cout << "Результаты поиска по запросу: "s << raw_query << endl;
     try {
@@ -78,13 +78,14 @@ void FindTopDocuments(const SearchServer& search_server,
 }
 
 void MatchDocuments(const SearchServer& search_server, 
-                    const std::string& query)
+                    const std::string_view& query)
 {
     try {
         cout << "Матчинг документов по запросу: "s << query << endl;                    
         for(const int document_id: search_server)
         {
-            const auto [words, status] = search_server.MatchDocument(query, document_id);
+            const auto [words, status] = search_server.MatchDocument(
+                    query, document_id);
             PrintMatchDocumentResult(document_id, words, status);
         }
     } catch (const exception& e) {
@@ -102,14 +103,14 @@ void PrintDocument(const Document& document)
 }
 
 void PrintMatchDocumentResult(int document_id, 
-                              const std::vector<std::string>& words,
+                              const std::vector<std::string_view>& words,
                               DocumentStatus status)
 {
     cout << "{ "s
          << "document_id = "s << document_id << ", "s
          << "status = "s << static_cast<int>(status) << ", "s
          << "words ="s;
-    for (const string& word : words) {
+    for (const string_view& word : words) {
         cout << ' ' << word;
     }
     cout << "}"s << endl;
