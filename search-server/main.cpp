@@ -74,8 +74,8 @@ int main() {
     //выключить в конcоли винды utf-8
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
-    
-    TestMatchDocument();
+   
+    //TestMatchDocument();
     
     mt19937 generator;
     

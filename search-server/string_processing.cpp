@@ -3,7 +3,7 @@
 
 using namespace std;
 
-std::vector<std::string> SplitIntoWords(const std::string_view& text) {    
+std::vector<string> SplitIntoWords(const std::string_view& text) {    
     vector<string> words;
     string word;
     for (const char c : text) {

@@ -22,9 +22,10 @@ public:
     explicit SearchServer(const std::string_view stop_words_text);
     explicit SearchServer(const std::string& stop_words_text);
 
-    void AddDocument(int document_id, const std::string_view& document, 
-                                   DocumentStatus status,
-                                   const std::vector<int>& ratings);
+    void AddDocument(int document_id, 
+                     const std::string_view& document, 
+                     DocumentStatus status,
+                     const std::vector<int>& ratings);
 
     template <typename DocumentPredicate>
     std::vector<Document> FindTopDocuments(const std::string_view& raw_query, 
@@ -69,10 +70,11 @@ private:
     
     
     const std::set<std::string, std::less<>> stop_words_;
-    std::map<std::string, std::map<int, double>> word_to_document_freqs_;
+    std::map<std::string_view, std::map<int, double>> word_to_document_freqs_;
     std::map<int, DocumentData> documents_;
     std::set<int> document_ids_;
-    std::map<int, std::map<std::string, double>> document_to_word_freqs_;
+    std::map<int, std::map<std::string_view, double>> document_to_word_freqs_;
+    std::set<std::string, std::less<>> unique_words_;
     
     bool IsStopWord(const std::string_view& word) const;
 
