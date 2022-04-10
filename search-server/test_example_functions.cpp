@@ -102,6 +102,11 @@ void TestRemoveDocument()
     // многопоточная версия
     search_server.RemoveDocument(execution::par, 2);
     report();
+    
+    //5 documents total, 4 documents for query [curly and funny]
+    //4 documents total, 3 documents for query [curly and funny]
+    //3 documents total, 2 documents for query [curly and funny]
+    //2 documents total, 1 documents for query [curly and funny] 
 }
 
 void TestMatchDocument()
