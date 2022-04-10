@@ -10,3 +10,5 @@ void TestParalelQuery();
 void TestProcessQueriesJoined();
 
 void TestRemoveDocument();
+
+void TestMatchDocument();

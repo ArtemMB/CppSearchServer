@@ -4,6 +4,8 @@
 
 #include "search_server.h"
 
+
+
 using namespace std;
     
 
@@ -57,10 +59,11 @@ int SearchServer::GetDocumentCount() const {
 }
 
 tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(
-        const string& raw_query, int document_id) const { 
+        const string& raw_query, int document_id) const {     
     Query query = ParseQuery(raw_query);        
     
-    vector<string> matched_words;
+    vector<string> matched_words;    
+        
     for (const string& word : query.plus_words) {
         if (word_to_document_freqs_.count(word) == 0) {
             continue;
@@ -69,6 +72,7 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(
             matched_words.push_back(word);
         }
     }
+        
     for (const string& word : query.minus_words) {
         if (word_to_document_freqs_.count(word) == 0) {
             continue;
@@ -77,10 +81,63 @@ tuple<vector<string>, DocumentStatus> SearchServer::MatchDocument(
             matched_words.clear();
             break;
         }
-    }
+    }    
+    
     tuple<vector<string>, DocumentStatus> out{matched_words, 
                 documents_.at(document_id).status};
     return out;        
+}
+
+std::tuple<std::vector<string>, DocumentStatus> 
+    SearchServer::MatchDocument(const std::execution::parallel_policy& policy,
+                            const std::string& raw_query, 
+                            int document_id) const
+{    
+    if(0 == document_ids_.count(document_id))
+    {
+        throw std::out_of_range{"Document id in not exsist: " 
+                                + std::to_string(document_id)};
+    }
+    
+    const map<string, double>& words_freqs{
+        GetWordFrequencies(document_id)};
+    if(words_freqs.empty())
+    {
+        return {std::vector<string>{},
+            documents_.at(document_id).status};
+    }    
+        
+    QueryView query{ParseQuery(policy, raw_query)};     
+    vector<string> matched_words;
+    matched_words.reserve(query.plus_words.size());
+       
+    for_each(policy, 
+             words_freqs.begin(), words_freqs.end(), 
+             
+             [&query, &matched_words](const auto& word) {
+        if (query.plus_words.count(word.first) != 0) {
+            matched_words.push_back(word.first);
+        }
+    });
+    
+    for_each(policy, 
+             words_freqs.begin(), words_freqs.end(),
+             
+             [&query, &matched_words](const auto& word) {
+        if (query.minus_words.count(word.first)) {
+            matched_words.clear();
+        }
+    }); 
+    
+    return {matched_words, documents_.at(document_id).status};
+}
+
+std::tuple<std::vector<string>, DocumentStatus> 
+    SearchServer::MatchDocument(const std::execution::sequenced_policy& policy, 
+                                const std::string& raw_query, 
+                                int document_id) const
+{
+    return MatchDocument(raw_query, document_id);
 }
 
 void SearchServer::RemoveDocument(int document_id)
@@ -176,11 +233,11 @@ set<int>::const_iterator SearchServer::end() const
     return document_ids_.cend();
 }
 
-bool SearchServer::IsStopWord(const string& word) const {
+bool SearchServer::IsStopWord(const string_view& word) const {
     return stop_words_.count(word) > 0;
 }
 
-bool SearchServer::IsValidWord(const string& word) {
+bool SearchServer::IsValidWord(const string_view& word) {
     // A valid word must not contain special characters
     return none_of(word.begin(), word.end(), [](char c) {
         return c >= '\0' && c < ' ';
@@ -211,7 +268,7 @@ int SearchServer::ComputeAverageRating(const vector<int>& ratings) {
     return rating_sum / static_cast<int>(ratings.size());
 }
 
-SearchServer::QueryWord SearchServer::ParseQueryWord(string text) const {
+SearchServer::QueryWord SearchServer::ParseQueryWord(string text) const {     
     if (text.empty()) {
         throw invalid_argument{text + " is empty"};
     }
@@ -227,10 +284,66 @@ SearchServer::QueryWord SearchServer::ParseQueryWord(string text) const {
     return QueryWord{text, is_minus, IsStopWord(text)};
 }
 
-SearchServer::Query SearchServer::ParseQuery(const string& text) const {        
+SearchServer::QueryWordView SearchServer::ParseQueryWord(
+        std::string_view text) const
+{
+    if (text.empty()) {
+        throw invalid_argument{string{text} + " is empty"};
+    }
+    
+    bool is_minus = false;
+    if (text[0] == '-') {
+        is_minus = true;
+        text = text.substr(1);
+    }
+    if (text.empty() || text[0] == '-' || !IsValidWord(text)) {
+        throw invalid_argument{string{text} + " is invalid"};
+    }
+    
+    return QueryWordView{text, is_minus, IsStopWord(text)};
+}
+
+SearchServer::Query SearchServer::ParseQuery(const string& text) const { 
     Query result;
     for (const string& word : SplitIntoWords(text)) {
         QueryWord query_word = ParseQueryWord(word);
+        
+        if (!query_word.is_stop) {
+            if (query_word.is_minus) {
+                result.minus_words.insert(query_word.data);
+            } else {
+                result.plus_words.insert(query_word.data);
+            }
+        }
+    }
+    return result;
+}
+
+SearchServer::QueryView SearchServer::ParseQuery(
+        const std::execution::parallel_policy& policy,
+        const string_view& text) const
+{
+    QueryView result;
+    std::vector<string_view> words{SplitIntoWordsView(text)};
+    //этот код работает только на локальной машине
+    //в тренажоре нет.
+    /*
+    for_each(policy, 
+             words.begin(), words.end(),
+             
+             [this, &result](const string_view& word) {
+        QueryWordView query_word = ParseQueryWord(word);
+        if (!query_word.is_stop) {
+            if (query_word.is_minus) {
+                result.minus_words.insert(query_word.data);
+            } else {
+                result.plus_words.insert(query_word.data);
+            }
+        }
+    }); */
+    //код для сдачи
+    for (const string_view& word : words) {
+        QueryWordView query_word = ParseQueryWord(word);
         
         if (!query_word.is_stop) {
             if (query_word.is_minus) {
