@@ -27,11 +27,11 @@ void RemoveDuplicates(SearchServer& search_server)
 {
     set<int> duplicate_for_remove;
     
-    set<set<string>> verified;
+    set<set<string_view>> verified;
     
     for(const int document_id : search_server)
     {
-        set<string> wordsOfDocument = ExtractKeysFromMap(
+        set<string_view> wordsOfDocument = ExtractKeysFromMap(
                                           search_server.GetWordFrequencies(
                                               document_id));
         
@@ -102,14 +102,14 @@ void PrintDocument(const Document& document)
 }
 
 void PrintMatchDocumentResult(int document_id, 
-                              const std::vector<std::string>& words,
+                              const std::vector<std::string_view>& words,
                               DocumentStatus status)
 {
     cout << "{ "s
          << "document_id = "s << document_id << ", "s
          << "status = "s << static_cast<int>(status) << ", "s
          << "words ="s;
-    for (const string& word : words) {
+    for (const string_view& word : words) {
         cout << ' ' << word;
     }
     cout << "}"s << endl;
