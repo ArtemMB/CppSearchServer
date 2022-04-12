@@ -4,7 +4,8 @@
 #include <vector>
 #include <set>
 
-std::vector<std::string> SplitIntoWords(const std::string_view& text);
+
+std::vector<std::string> SplitIntoWords(const std::string_view text);
     
 template <typename StringContainer>
 std::set<std::string, std::less<>> MakeUniqueNonEmptyStrings(
@@ -19,4 +20,4 @@ std::set<std::string, std::less<>> MakeUniqueNonEmptyStrings(
 }
 
 std::vector<std::string_view> SplitIntoWordsView(
-        const std::string_view& str);
+        const std::string_view str);

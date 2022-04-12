@@ -144,10 +144,15 @@ void TestMatchDocument()
     }
 
     {
-        const auto [words, status] = search_server.MatchDocument(
+        /*const auto [words, status] = search_server.MatchDocument(
                 execution::par, 
                 query, 3);
-        cout << words.size() << " words for document 3"s << endl;
+        cout << words.size() << " words for document 3"s << endl;*/        
         // 0 words for document 3
+        
+       /* const auto [words, status] = search_server.MatchDocument(
+                execution::seq, 
+                query, 2);
+        cout << words.size() << " words for document 2"s << endl;*/
     }
 }
