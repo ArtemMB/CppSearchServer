@@ -1,6 +1,6 @@
 #include <algorithm>
 #include <cmath>
-
+#include <utility>
 
 #include "search_server.h"
 
@@ -125,30 +125,33 @@ tuple<vector<string_view>, DocumentStatus>
     QueryView query; 
     ParseQuery(policy, raw_query, query);
     
+    auto checker = [&](const string_view& word)
+    {
+        return words_freqs.find(word) !=  words_freqs.end();
+    };
+    
     bool is_minus{any_of(
                     policy, 
                     query.minus_words.begin(), query.minus_words.end(), 
-                    [&](const string_view& word) {
-            return words_freqs.find(word) !=  words_freqs.end();
-        })};
+                    checker)};
     
     if (is_minus) {
         return {vector<string_view>{}, 
             documents_.at(document_id).status};
     }   
     
-    vector<string_view> matched_words;
-    matched_words.reserve(query.plus_words.size());
+    vector<string_view> matched_words(query.plus_words.size());
     
-    for_each(policy, 
-             words_freqs.begin(), words_freqs.end(), 
-             
-             [&query, &matched_words](const auto& word) {
-        if (find(query.plus_words.begin(), query.plus_words.end(), word.first) != query.plus_words.end()) {
-            matched_words.push_back(word.first);
-        }
-    });        
-    sort(matched_words.begin(), matched_words.end());
+    
+    auto words_end = copy_if(policy, 
+             query.plus_words.begin(), query.plus_words.end(), 
+             matched_words.begin(),
+             checker);        
+    
+    sort(policy, matched_words.begin(), words_end);
+    words_end = unique(policy, matched_words.begin(), words_end);
+    matched_words.erase(words_end, matched_words.end());
+    
     return {matched_words,
         documents_.at(document_id).status};
 }
@@ -370,6 +373,16 @@ void SearchServer::ParseQuery(
     }    
 }
 
+vector<string_view> SortUniq(const execution::sequenced_policy& policy,
+                             vector<string_view>& container) {
+
+    sort(policy, container.begin(), container.end());
+    auto words_end = unique(policy, container.begin(), container.end());
+    container.erase(words_end, container.end());
+
+    return container;
+}
+
 void SearchServer::ParseQuery(
         const execution::sequenced_policy& policy, 
         const string_view& text, 
@@ -388,6 +401,9 @@ void SearchServer::ParseQuery(
             }
         }
     } 
+    
+    out.minus_words = SortUniq(policy, out.minus_words);
+    out.plus_words = SortUniq(policy, out.plus_words);
 }
 
 double SearchServer::ComputeWordInverseDocumentFreq(
