@@ -20,7 +20,7 @@ SearchServer::SearchServer(const string& stop_words_text)
 }
 
 void SearchServer::AddDocument(int document_id, 
-                               const std::string_view document, 
+                               const string_view document, 
                                DocumentStatus status, 
                                const vector<int>& ratings) {
     if ((document_id < 0) || (documents_.count(document_id) > 0)) {
@@ -76,8 +76,8 @@ tuple<vector<string_view>, DocumentStatus> SearchServer::MatchDocument(
                                 + to_string(document_id)};
     }
     
-    QueryView query;//{ParseQuery(raw_query)};        
-    ParseQuery(execution::sequenced_policy{}, raw_query, query);
+    Query query{ParseQuery(raw_query)};        
+    //ParseQuery(execution::sequenced_policy{}, raw_query, query);
     const map<string_view, double>& words_freqs{
         document_to_word_freqs_.at(document_id)};
     
@@ -121,25 +121,25 @@ tuple<vector<string_view>, DocumentStatus>
         return {vector<string_view>{},
             documents_.at(document_id).status};
     }    
-    //LOG_DURATION(string{"1"});   
+     
     QueryView query; 
     ParseQuery(policy, raw_query, query);
-    //LOG_DURATION(string{"2"});
+    
     bool is_minus{any_of(
                     policy, 
                     query.minus_words.begin(), query.minus_words.end(), 
                     [&](const string_view& word) {
             return words_freqs.find(word) !=  words_freqs.end();
         })};
-    //LOG_DURATION(string{"3"});   
+    
     if (is_minus) {
         return {vector<string_view>{}, 
             documents_.at(document_id).status};
     }   
-    //LOG_DURATION(string{"4"}); 
+    
     vector<string_view> matched_words;
     matched_words.reserve(query.plus_words.size());
-    //LOG_DURATION(string{"5"}); 
+    
     for_each(policy, 
              words_freqs.begin(), words_freqs.end(), 
              
@@ -148,7 +148,7 @@ tuple<vector<string_view>, DocumentStatus>
             matched_words.push_back(word.first);
         }
     });        
-    //LOG_DURATION(string{"6"}); 
+    sort(matched_words.begin(), matched_words.end());
     return {matched_words,
         documents_.at(document_id).status};
 }
@@ -191,11 +191,11 @@ void SearchServer::RemoveDocument(
         const execution::parallel_policy& policy, 
         int document_id)
 {
-    const std::map<std::string_view, double>& words_freqs{
+    const map<string_view, double>& words_freqs{
         document_to_word_freqs_.at(document_id)};
     if(!words_freqs.empty())
     {
-        std::vector<string_view> words{words_freqs.size()};
+        vector<string_view> words{words_freqs.size()};
         
         transform(policy, 
                   words_freqs.begin(), words_freqs.end(), 
@@ -313,7 +313,7 @@ SearchServer::QueryWord SearchServer::ParseQueryWord(string text) const {
 }
 
 SearchServer::QueryWordView SearchServer::ParseQueryWord(
-        std::string_view text) const
+        string_view text) const
 {
     //LOG_DURATION(string{"ParseQueryWord"});
     if (text.empty()) {
@@ -332,24 +332,12 @@ SearchServer::QueryWordView SearchServer::ParseQueryWord(
     return QueryWordView{word, is_minus, IsStopWord(word)};
 }
 
-SearchServer::Query SearchServer::ParseQuery(const string_view& text) const {     
+SearchServer::Query SearchServer::ParseQuery(
+        const string_view& text) const {     
     Query result;
     auto words{SplitIntoWordsView(text)};
     for (const string_view& word : words) {
-            //QueryWord query_word = ParseQueryWord(word);
-            QueryWordView query_word = ParseQueryWord(word);
-            if (!query_word.is_stop) {
-                if (query_word.is_minus) {
-                    result.minus_words.insert(query_word.data);
-                } else {
-                    result.plus_words.insert(query_word.data);
-                }
-            }
-        }
-    
-    /*for (const string& word : SplitIntoWords(text)) {
-        QueryWord query_word = ParseQueryWord(word);
-        
+        QueryWordView query_word = ParseQueryWord(word);
         if (!query_word.is_stop) {
             if (query_word.is_minus) {
                 result.minus_words.insert(query_word.data);
@@ -357,24 +345,11 @@ SearchServer::Query SearchServer::ParseQuery(const string_view& text) const {
                 result.plus_words.insert(query_word.data);
             }
         }
-    }*/
+    }    
+    
     return result;
 }
 
-void SearchServer::ParseQuery(const std::string_view& text, Query& out) const
-{
-    auto words{SplitIntoWordsView(text)};
-    for (const string_view& word : words) {            
-        QueryWordView query_word = ParseQueryWord(word);
-        if (!query_word.is_stop) {
-            if (query_word.is_minus) {
-                out.minus_words.insert(query_word.data);
-            } else {
-                out.plus_words.insert(query_word.data);
-            }
-        }
-    }   
-}
 
 void SearchServer::ParseQuery(
         const execution::parallel_policy& policy,
@@ -382,44 +357,22 @@ void SearchServer::ParseQuery(
 {
     auto words{SplitIntoWordsView(text)};
     
-    //код для сдачи
     for (const string_view& word : words) {
         QueryWordView query_word = ParseQueryWord(word);
         
         if (!query_word.is_stop) {
-            if (query_word.is_minus) {
-                out.minus_words.push_back(query_word.data);
-            } else {
-                out.plus_words.push_back(query_word.data);
+            if (query_word.is_minus) {                
+                out.minus_words.push_back(query_word.data);                         
+            } else {                
+                out.plus_words.push_back(query_word.data);                
             }
         }
-    }   
-    //этот код работает только на локальной машине
-    //в тренажоре нет.
-    /*vector<QueryWordView> queryWordView;
-    queryWordView.resize(words.size());
-    transform(policy, 
-              words.begin(), words.end(), 
-              queryWordView.begin(),
-              [this](const auto& word)
-    {
-        return ParseQueryWord(word);
-    });
-    
-    for (const QueryWordView& word : queryWordView) { 
-        if (!word.is_stop) {
-            if (word.is_minus) {
-                out.minus_words.push_back(word.data);
-            } else {
-                out.plus_words.push_back(word.data);
-            }
-        }
-    }   */  
+    }    
 }
 
 void SearchServer::ParseQuery(
-        const std::execution::sequenced_policy& policy, 
-        const std::string_view& text, 
+        const execution::sequenced_policy& policy, 
+        const string_view& text, 
         QueryView& out) const
 {
     auto words{SplitIntoWordsView(text)};    
@@ -437,6 +390,7 @@ void SearchServer::ParseQuery(
     } 
 }
 
-double SearchServer::ComputeWordInverseDocumentFreq(const string_view word) const {
+double SearchServer::ComputeWordInverseDocumentFreq(
+        const string_view word) const {
     return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
 }

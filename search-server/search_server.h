@@ -107,12 +107,11 @@ private:
         std::set<std::string_view, std::less<>> minus_words;
     };
 
-    Query ParseQuery(const std::string_view& text) const;
-    void ParseQuery(const std::string_view& text, Query& out) const;
+    Query ParseQuery(const std::string_view& text) const;    
     
     struct QueryView {
-        std::deque<std::string_view> plus_words;
-        std::deque<std::string_view> minus_words;
+        std::vector<std::string_view> plus_words;
+        std::vector<std::string_view> minus_words;
     };
     void ParseQuery(
             const std::execution::parallel_policy& policy,
