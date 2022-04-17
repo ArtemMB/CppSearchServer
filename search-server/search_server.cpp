@@ -77,7 +77,7 @@ tuple<vector<string_view>, DocumentStatus> SearchServer::MatchDocument(
     }
     
     Query query{ParseQuery(raw_query)};        
-    //ParseQuery(execution::sequenced_policy{}, raw_query, query);
+    
     const map<string_view, double>& words_freqs{
         document_to_word_freqs_.at(document_id)};
     
