@@ -50,7 +50,7 @@ void SearchServer::AddDocument(int document_id,
 vector<Document> SearchServer::FindTopDocuments(
         const string_view raw_query, 
         DocumentStatus status) const {
-    return FindTopDocuments(
+    return FindTopDocuments(execution::seq,
                 raw_query,
                 [status](int , 
                 DocumentStatus document_status, int ) {
@@ -59,8 +59,45 @@ vector<Document> SearchServer::FindTopDocuments(
 }
 
 vector<Document> SearchServer::FindTopDocuments(
+        const execution::sequenced_policy& , 
+        const string_view raw_query, 
+        DocumentStatus status) const
+{
+    return FindTopDocuments(raw_query, status);
+}
+
+vector<Document> SearchServer::FindTopDocuments(
+        const execution::parallel_policy& policy, 
+        const string_view raw_query, 
+        DocumentStatus status) const
+{    
+    return FindTopDocuments(execution::par,
+                raw_query,
+                [status](int , 
+                DocumentStatus document_status, int ) {
+        return document_status == status;
+    });
+}
+
+vector<Document> SearchServer::FindTopDocuments(
+        const execution::sequenced_policy& policy, 
+        const string_view raw_query) const
+{
+    return FindTopDocuments(execution::seq, raw_query, DocumentStatus::ACTUAL);
+}
+
+vector<Document> SearchServer::FindTopDocuments(
+        const execution::parallel_policy& policy, 
+        const string_view raw_query) const
+{
+    return FindTopDocuments(execution::par, raw_query, DocumentStatus::ACTUAL);
+}
+
+
+
+vector<Document> SearchServer::FindTopDocuments(
         const string_view raw_query) const {
-    return FindTopDocuments(raw_query, DocumentStatus::ACTUAL);
+    return FindTopDocuments(execution::seq, raw_query, DocumentStatus::ACTUAL);
 }
 
 int SearchServer::GetDocumentCount() const {
@@ -353,6 +390,15 @@ SearchServer::Query SearchServer::ParseQuery(
     return result;
 }
 
+vector<string_view> SortUniq(const execution::parallel_policy& policy,
+                             vector<string_view>& container) {
+
+    sort(policy, container.begin(), container.end());
+    auto words_end = unique(policy, container.begin(), container.end());
+    container.erase(words_end, container.end());
+
+    return container;
+}
 
 void SearchServer::ParseQuery(
         const execution::parallel_policy& policy,
@@ -371,6 +417,8 @@ void SearchServer::ParseQuery(
             }
         }
     }    
+    out.minus_words = SortUniq(policy, out.minus_words);
+    out.plus_words = SortUniq(policy, out.plus_words);
 }
 
 vector<string_view> SortUniq(const execution::sequenced_policy& policy,
@@ -410,3 +458,7 @@ double SearchServer::ComputeWordInverseDocumentFreq(
         const string_view word) const {
     return log(GetDocumentCount() * 1.0 / word_to_document_freqs_.at(word).size());
 }
+
+
+
+

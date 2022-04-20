@@ -12,3 +12,6 @@ void TestProcessQueriesJoined();
 void TestRemoveDocument();
 
 void TestMatchDocument();
+
+
+void TestFindTopDocuments();
