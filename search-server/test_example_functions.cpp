@@ -236,20 +236,7 @@ void TestMatchDocument()
         cout << words.size() << " words for document 2"s << endl;
         // 2 words for document 2
     }
-
-    {
-        /*const auto [words, status] = search_server.MatchDocument(
-                execution::par, 
-                query, 3);
-        cout << words.size() << " words for document 3"s << endl;*/        
-        // 0 words for document 3
-        
-       /* const auto [words, status] = search_server.MatchDocument(
-                execution::seq, 
-                query, 2);
-        cout << words.size() << " words for document 2"s << endl;*/
-    }
-        }
+}
     
 template <typename ExecutionPolicy>
 void Test(string_view mark, SearchServer search_server, 
@@ -267,59 +254,6 @@ void Test(string_view mark, SearchServer search_server,
 void TestFindTopDocuments()
 {
     #define TEST(policy) Test(#policy, search_server, queries, execution::policy)  
-    /*
-    {
-        
-//        ACTUAL by default:
-//        { document_id = 2, relevance = 0.866434, rating = 1 }
-//        { document_id = 4, relevance = 0.231049, rating = 1 }
-//        { document_id = 1, relevance = 0.173287, rating = 1 }
-//        { document_id = 3, relevance = 0.173287, rating = 1 }
-//        BANNED:
-//        Even ids:
-//        { document_id = 2, relevance = 0.866434, rating = 1 }
-//        { document_id = 4, relevance = 0.231049, rating = 1 } 
-        
-        SearchServer search_server("and with"s);
-        
-        int id = 0;
-        for (
-            const string& text : {
-                "white cat and yellow hat"s,
-                "curly cat curly tail"s,
-                "nasty dog with big eyes"s,
-                "nasty pigeon john"s,
-            }
-        ) {
-            search_server.AddDocument(++id, text, DocumentStatus::ACTUAL, {1, 2});
-        }
-    
-    
-        cout << "ACTUAL by default:"s << endl;
-        // последовательная версия
-        for (const Document& document : 
-             //search_server.FindTopDocuments("curly nasty cat"s)
-             search_server.FindTopDocuments(execution::par, "curly nasty cat"s)
-             ) 
-        {
-            PrintDocument(document);
-        }
-        cout << "BANNED:"s << endl;
-        // последовательная версия
-        for (const Document& document : search_server.FindTopDocuments(
-                 execution::seq, "curly nasty cat"s, DocumentStatus::BANNED)) {
-            PrintDocument(document);
-        }
-    
-        cout << "Even ids:"s << endl;
-        // параллельная версия
-        for (const Document& document : search_server.FindTopDocuments(
-                 execution::par, "curly nasty cat"s, 
-                 [](int document_id, DocumentStatus status, int rating)
-        { return document_id % 2 == 0; })) {
-            PrintDocument(document);
-        }
-    }//*/
     
     {
         mt19937 generator;
@@ -333,20 +267,7 @@ void TestFindTopDocuments()
         }
     
         const auto queries = GenerateQueries(generator, dictionary, 100, 70);
-        /*{
-            for (const string_view query : queries) {
-                const auto _seq = search_server.FindTopDocuments(execution::seq, query);
-                const auto _par = search_server.FindTopDocuments(execution::par, query);
-                if(_seq.size() != _par.size())
-                {
-                    cout<<query<<'\n';
-                    cout<<_seq.size()<<"\n";
-                    cout<<_par.size()<<"\n";
-                    break;
-                }                
-            }
-            cout<<"All correct\n";
-        }*/
+        
         TEST(seq);
         TEST(par);
     }
