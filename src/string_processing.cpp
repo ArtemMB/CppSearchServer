@@ -1,7 +1,5 @@
 #include "string_processing.h"
 
-//#include "logduration.h"
-
 using namespace std;
 
 vector<string> SplitIntoWords(const string_view text) {    
@@ -26,8 +24,6 @@ vector<string> SplitIntoWords(const string_view text) {
 
 vector<string_view> SplitIntoWordsView(const string_view str)
 {
-    //LOG_DURATION(string{"SplitIntoWordsView"});
-    
     vector<string_view> result;
    
     int64_t pos{0};

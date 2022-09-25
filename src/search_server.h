@@ -5,7 +5,6 @@
 #include <map>
 #include <set>
 #include <execution>
-#include <execution>
 #include <type_traits>
 #include <iterator>
 #include <thread>
@@ -157,7 +156,7 @@ private:
     void ParseQuery(
             const std::execution::sequenced_policy& policy,
             const std::string_view& text, QueryView& out) const;
-    // Existence required
+    
     double ComputeWordInverseDocumentFreq(const std::string_view word) const;
 
     

@@ -4,7 +4,6 @@
 
 #include "search_server.h"
 
-//#include "logduration.h"
 
 using namespace std;
     
@@ -15,7 +14,7 @@ SearchServer::SearchServer(const string_view stop_words_text):
 }
 
 SearchServer::SearchServer(const string& stop_words_text)
-    : SearchServer(string_view(stop_words_text))  // Invoke delegating constructor from string container
+    : SearchServer(string_view(stop_words_text))  
 {
 }
 
